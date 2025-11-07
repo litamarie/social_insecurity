@@ -7,51 +7,62 @@ It also contains the SQL queries used for communicating with the database.
 from pathlib import Path
 
 from flask import current_app as app
-from flask import flash, redirect, render_template, send_from_directory, url_for
+from flask import flash, redirect, render_template, send_from_directory, url_for, request
 
 from social_insecurity import sqlite
-from social_insecurity.forms import CommentsForm, FriendsForm, IndexForm, PostForm, ProfileForm
+from social_insecurity.forms import CommentsForm, FriendsForm, IndexForm, PostForm, ProfileForm, LoginForm, RegisterForm
 
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/index", methods=["GET", "POST"])
 def index():
-    """Provides the index page for the application.
+    # Give each form a unique prefix so their field names don't collide
+    login_form = LoginForm(prefix="login")
+    register_form = RegisterForm(prefix="register")
 
-    It reads the composite IndexForm and based on which form was submitted,
-    it either logs the user in or registers a new user.
+    if request.method == "POST":
+        # 1) Detect which form was actually submitted by checking the prefixed submit name
+        if "register-submit" in request.form:
+            if register_form.validate():
+                insert_user = f"""
+                    INSERT INTO Users (username, first_name, last_name, password)
+                    VALUES ('{register_form.username.data}', '{register_form.first_name.data}',
+                            '{register_form.last_name.data}', '{register_form.password.data}');
+                """
+                sqlite.query(insert_user)
+                flash("User successfully created!", category="success")
+                return redirect(url_for("index"))
+            else:
+                for field, errs in register_form.errors.items():
+                    for err in errs:
+                        flash(f"Register {field}: {err}", "warning")
 
-    If no form was submitted, it simply renders the index page.
-    """
-    index_form = IndexForm()
-    login_form = index_form.login
-    register_form = index_form.register
+        elif "login-submit" in request.form:
+            # Only validate the login form
+            if login_form.validate():
+                get_user = f"""
+                    SELECT * FROM Users WHERE username = '{login_form.username.data}';
+                """
+                user = sqlite.query(get_user, one=True)
+                if user is None:
+                    flash("Sorry, this user does not exist!", category="warning")
+                elif user["password"] != login_form.password.data:
+                    flash("Sorry, wrong password!", category="warning")
+                else:
+                    return redirect(url_for("stream", username=login_form.username.data))
+            else:
+                for field, errs in login_form.errors.items():
+                    for err in errs:
+                        flash(f"Login {field}: {err}", "warning")
+        else:
+            flash("Unknown form submitted.", "warning")
 
-    if login_form.is_submitted() and login_form.submit.data:
-        get_user = f"""
-            SELECT *
-            FROM Users
-            WHERE username = '{login_form.username.data}';
-            """
-        user = sqlite.query(get_user, one=True)
-
-        if user is None:
-            flash("Sorry, this user does not exist!", category="warning")
-        elif user["password"] != login_form.password.data:
-            flash("Sorry, wrong password!", category="warning")
-        elif user["password"] == login_form.password.data:
-            return redirect(url_for("stream", username=login_form.username.data))
-
-    elif register_form.is_submitted() and register_form.submit.data:
-        insert_user = f"""
-            INSERT INTO Users (username, first_name, last_name, password)
-            VALUES ('{register_form.username.data}', '{register_form.first_name.data}', '{register_form.last_name.data}', '{register_form.password.data}');
-            """
-        sqlite.query(insert_user)
-        flash("User successfully created!", category="success")
-        return redirect(url_for("index"))
-
-    return render_template("index.html.j2", title="Welcome", form=index_form)
+    return render_template(
+        "index.html.j2",
+        title="Welcome",
+        login_form=login_form,
+        register_form=register_form,
+    )
 
 
 @app.route("/stream/<string:username>", methods=["GET", "POST"])

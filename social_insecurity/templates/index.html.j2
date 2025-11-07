@@ -15,14 +15,18 @@
           <div class="card-header">Sign In</div>
           <div class="card-body">
             <h5 class="card-title mb-3">Access an existing profile</h5>
-            <form action="" method="post" novalidate>
-              <div class="mb-3">{{ form.login.username(class_="form-control") }}</div>
-              <div class="mb-3">{{ form.login.password(class_="form-control") }}</div>
-              <div class="mb-3 form-check form-check-inline">
-                {{ form.login.remember_me(class_="form-check-input") }} {{ form.login.remember_me.label(class_="form-check-label") }}
-              </div>
-              <div>{{ form.login.submit(class_="btn btn-primary") }}</div>
-            </form>
+
+        <form action="" method="post" novalidate>
+          {{ login_form.hidden_tag() }}
+          <div class="mb-3">{{ login_form.username(class_="form-control") }}</div>
+          <div class="mb-3">{{ login_form.password(class_="form-control") }}</div>
+          <div class="mb-3 form-check form-check-inline">
+            {{ login_form.remember_me(class_="form-check-input") }}
+            {{ login_form.remember_me.label(class_="form-check-label") }}
+          </div>
+          <div>{{ login_form.submit(class_="btn btn-primary") }}</div>
+        </form>
+
           </div>
         </div>
       </div>
@@ -32,14 +36,17 @@
           <div class="card-header">Register</div>
           <div class="card-body">
             <h5 class="card-title mb-3">Create a new profile</h5>
-            <form action="" method="post" novalidate>
-              <div class="mb-3">{{ form.register.first_name(class_="form-control") }}</div>
-              <div class="mb-3">{{ form.register.last_name(class_="form-control") }}</div>
-              <div class="mb-3">{{ form.register.username(class_="form-control") }}</div>
-              <div class="mb-3">{{ form.register.password(class_="form-control") }}</div>
-              <div class="mb-3">{{ form.register.confirm_password(class_="form-control") }}</div>
-              <div>{{ form.register.submit(class_="btn btn-primary") }}</div>
-            </form>
+
+        <form action="" method="post" novalidate>
+          {{ register_form.hidden_tag() }}
+          <div class="mb-3">{{ register_form.first_name(class_="form-control") }}</div>
+          <div class="mb-3">{{ register_form.last_name(class_="form-control") }}</div>
+          <div class="mb-3">{{ register_form.username(class_="form-control") }}</div>
+          <div class="mb-3">{{ register_form.password(class_="form-control") }}</div>
+          <div class="mb-3">{{ register_form.confirm_password(class_="form-control") }}</div>
+          <div>{{ register_form.submit(class_="btn btn-primary") }}</div>
+        </form>
+        
           </div>
         </div>
       </div>
